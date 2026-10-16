@@ -1,0 +1,18 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+
+    ports:
+      - "8030:1883"
+      - "8031:8883"
+      - "8032:9001"
+
+    volumes:
+      - ../volumes/config:/mosquitto/config
+      - ../volumes/data:/mosquitto/data
+      - ../volumes/logs:/mosquitto/log
+
+    environment:
+      - TZ=America/Chicago
