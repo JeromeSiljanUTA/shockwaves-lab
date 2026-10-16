@@ -1,0 +1,16 @@
+services:
+  app:
+    image: ghcr.io/hargata/lubelogger:latest
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ../volumes/data:/App/data
+      - ../volumes/keys:/root/.aspnet/DataProtection-Keys
+    ports:
+      - 8084:8080
+    env_file:
+      - config.env
+
+volumes:
+  data:
+  keys:
