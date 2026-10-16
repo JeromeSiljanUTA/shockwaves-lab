@@ -6,9 +6,9 @@ services:
         - 13378:80
        
       volumes:
-        - ../volumes/audiobooks:/audiobooks
-        - ../volumes/podcasts:/podcasts
-        - ../volumes/metadata:/metadata
-        - ../volumes/config:/config
+        - ../../volumes/audiobookshelf/audiobooks:/audiobooks
+        - ../../volumes/audiobookshelf/podcasts:/podcasts
+        - ../../volumes/audiobookshelf/metadata:/metadata
+        - ../../volumes/audiobookshelf/config:/config
           
       restart: unless-stopped
