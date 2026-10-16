@@ -1,0 +1,24 @@
+services:
+  nolongerevil:
+    image: ghcr.io/codykociemba/nolongerevil-selfhosted:latest
+    container_name: nolongerevil-server
+    restart: unless-stopped
+
+    ports:
+      - "8001:8000"
+      - "8082:8082"
+
+    volumes:
+      - ../volumes/nolongerevil-data:/data
+
+    environment:
+      - API_ORIGIN=http://192.168.10.10:8001
+      - REQUIRE_DEVICE_PAIRING=false
+      - ENTRY_KEY_TTL_SECONDS=3600
+      - WEATHER_CACHE_TTL_MS=600000
+      - MAX_SUBSCRIPTIONS_PER_DEVICE=100
+      - DEBUG_LOGGING=false
+
+      # MQTT
+      - MQTT_HOST=192.168.10.10
+      - MQTT_PORT=8030
