@@ -1,0 +1,14 @@
+version: "2"
+
+services:
+  server:
+    image: gitea/gitea:latest-rootless
+    restart: always
+    volumes:
+      - ../volumes/data:/var/lib/gitea
+      - ../volumes/config:/etc/gitea
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3001:3000"
+      - "2222:2222"
