@@ -1,50 +1,56 @@
 services:
-  ollama:
-    image: ollama/ollama
-    container_name: ollama
-    devices:
-      - nvidia.com/gpu=all
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
-    ports:
-      - "11434:11434"
-    volumes:
-      - ../volumes:/root/.ollama
-    restart: unless-stopped
+    ollama:
+      image: ollama/ollama
+      container_name: ollama
 
-  openwebui:
-    image: ghcr.io/open-webui/open-webui:main
-    container_name: open-webui
-    ports:
-      - "8009:8080"
-    environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
-    volumes:
-      - open-webui:/app/backend/data
-    depends_on:
-      - ollama
-    restart: unless-stopped
+      devices:
+        - nvidia.com/gpu=all
 
-  hermes:
-    image: nousresearch/hermes-agent:latest
-    container_name: hermes
-    restart: unless-stopped
+      environment:
+        - NVIDIA_VISIBLE_DEVICES=all
+        - NVIDIA_DRIVER_CAPABILITIES=all
 
-    command: gateway run
+      ports:
+        - "11434:11434"
 
-    ports:
-      - "8642:8642"
-      - "9119:9119"
+      volumes:
+        - ../../volumes/ollama:/root/.ollama
 
-    volumes:
-      - ../volumes/hermes:/opt/data
+      restart: unless-stopped
 
-    environment:
-      HERMES_DASHBOARD: "1"
-      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: "jerome"
-      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: "pass"
-      HERMES_DASHBOARD_BASIC_AUTH_SECRET: "secret!only50Things"
+    openwebui:
+      image: ghcr.io/open-webui/open-webui:main
+      container_name: open-webui
 
-volumes:
-  open-webui:
+      ports:
+        - "8009:8080"
+
+      environment:
+        - OLLAMA_BASE_URL=http://ollama:11434
+
+      volumes:
+        - ../../volumes/open-webui:/app/backend/data
+
+      depends_on:
+        - ollama
+
+      restart: unless-stopped
+
+    hermes:
+      image: nousresearch/hermes-agent:latest
+      container_name: hermes
+
+      command: gateway run
+
+      ports:
+        - "8642:8642"
+        - "9119:9119"
+
+      volumes:
+        - ../../volumes/hermes:/opt/data
+
+      env_file:
+        - config.env
+        - ../../volumes/secrets/ollama/secrets.env
+
+      restart: unless-stopped
