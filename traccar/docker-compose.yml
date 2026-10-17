@@ -1,14 +1,17 @@
 services:
-  traccar:
-    image: traccar/traccar:latest
-    container_name: traccar
-    hostname: traccar
-    restart: unless-stopped
-    ports:
-      - "8002:8082"
-      - "6000-6150:5000-5150"
-      - "6000-6150:5000-5150/udp"
-    volumes:
-      - ../volumes/logs:/opt/traccar/logs:rw
-      - ../volumes/traccar.xml:/opt/traccar/conf/traccar.xml:ro
-      - ../volumes/data:/opt/traccar/data:rw
+    traccar:
+      image: traccar/traccar:latest
+      container_name: traccar
+      hostname: traccar
+
+      ports:
+        - "8002:8082"
+        - "6000-6150:5000-5150"
+        - "6000-6150:5000-5150/udp"
+
+      volumes:
+        - ../../volumes/traccar/logs:/opt/traccar/logs:rw
+        - ../../volumes/traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
+        - ../../volumes/traccar/data:/opt/traccar/data:rw
+
+      restart: unless-stopped
