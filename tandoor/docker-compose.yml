@@ -1,24 +1,31 @@
 services:
-  db_recipes:
-    restart: always
-    image: postgres:16-alpine
-    volumes:
-      - ./postgresql:/var/lib/postgresql/data
-    env_file:
-      - ./.env
+    db_recipes:
+      image: postgres:16-alpine
 
-  web_recipes:
-    restart: always
-    image: vabene1111/recipes
-    env_file:
-      - ./.env
-    ports:
-      - 29170:80
-    volumes:
-      - staticfiles:/opt/recipes/staticfiles
-      - ./mediafiles:/opt/recipes/mediafiles
-    depends_on:
-      - db_recipes
+      env_file:
+        - config.env
+        - ../../volumes/secrets/tandoor/secrets.env
 
-volumes:
-  staticfiles:
+      volumes:
+        - ../../volumes/tandoor/postgresql:/var/lib/postgresql/data
+
+      restart: always
+
+    web_recipes:
+      image: vabene1111/recipes
+
+      env_file:
+        - config.env
+        - ../../volumes/secrets/tandoor/secrets.env
+
+      ports:
+        - "29170:80"
+
+      volumes:
+        - ../../volumes/tandoor/staticfiles:/opt/recipes/staticfiles
+        - ../../volumes/tandoor/mediafiles:/opt/recipes/mediafiles
+
+      depends_on:
+        - db_recipes
+
+      restart: always
