@@ -36,21 +36,3 @@ services:
 
       restart: unless-stopped
 
-    hermes:
-      image: nousresearch/hermes-agent:latest
-      container_name: hermes
-
-      command: gateway run
-
-      ports:
-        - "8642:8642"
-        - "9119:9119"
-
-      volumes:
-        - ../../volumes/hermes:/opt/data
-
-      env_file:
-        - config.env
-        - ../../volumes/secrets/ollama/secrets.env
-
-      restart: unless-stopped
