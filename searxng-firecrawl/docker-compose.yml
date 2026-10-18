@@ -1,0 +1,89 @@
+services:
+    # ------------------------------------------------------------------
+    # SearXNG — metasearch engine used by Firecrawl and coding agents
+    # ------------------------------------------------------------------
+    searxng:
+      image: docker.io/searxng/searxng:latest
+
+      ports:
+        - "8888:8080"
+
+      volumes:
+        - ../../volumes/searxng/config:/etc/searxng:rw
+
+      environment:
+        - SEARXNG_BASE_URL=http://localhost:8888/
+        - SEARXNG_REDIS_URL=redis://searxng-redis:6379/0
+
+      depends_on:
+        - searxng-redis
+
+      cap_drop:
+        - ALL
+      cap_add:
+        - CHOWN
+        - SETGID
+        - SETUID
+
+      logging:
+        driver: json-file
+        options:
+          max-size: "1m"
+          max-file: "1"
+
+      restart: unless-stopped
+
+    searxng-redis:
+      image: docker.io/valkey/valkey:8-alpine
+
+      command: valkey-server --save 30 1 --loglevel warning
+
+      volumes:
+        - ../../volumes/searxng/redis:/data
+
+      restart: unless-stopped
+
+    # ------------------------------------------------------------------
+    # Firecrawl — crawl/scrape API used by coding agents
+    # ------------------------------------------------------------------
+    firecrawl-api:
+      image: ghcr.io/firecrawl/firecrawl:latest
+
+      ports:
+        - "3002:3002"
+
+      environment:
+        - HOST=0.0.0.0
+        - PORT=3002
+        - REDIS_URL=redis://firecrawl-redis:6379
+        - REDIS_RATE_LIMIT_URL=redis://firecrawl-redis:6379
+        - PLAYWRIGHT_MICROSERVICE_URL=http://firecrawl-playwright:3000/scrape
+        # SearXNG runs in this same compose project network
+        - SEARXNG_ENDPOINT=http://searxng:8080/search
+
+      env_file:
+        - ../../volumes/secrets/firecrawl/secrets.env
+
+      depends_on:
+        - firecrawl-redis
+        - firecrawl-playwright
+
+      restart: unless-stopped
+
+    firecrawl-playwright:
+      image: ghcr.io/firecrawl/playwright-service:latest
+
+      environment:
+        - PORT=3000
+
+      restart: unless-stopped
+
+    firecrawl-redis:
+      image: docker.io/redis:7-alpine
+
+      command: redis-server --bind 0.0.0.0
+
+      volumes:
+        - ../../volumes/firecrawl/redis:/data
+
+      restart: unless-stopped

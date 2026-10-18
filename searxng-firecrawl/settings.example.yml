@@ -1,0 +1,45 @@
+# SearXNG settings.yml
+# Place at: volumes/searxng/config/settings.yml on the server
+#
+# Minimal config tuned for API/agent use (JSON output enabled).
+# See: https://docs.searxng.org/admin/settings/
+
+use_default_settings: true
+
+general:
+  instance_name: "searxng"
+  # Restrict to your LAN if you want:
+  # public_instance: false
+
+server:
+  base_url: http://localhost:8888/
+  secret_key: "CHANGE_ME_TO_A_RANDOM_STRING"
+  limiter: false
+  image_proxy: true
+
+search:
+  # Enable the JSON API format used by Firecrawl / agents.
+  formats:
+    - html
+    - json
+
+ui:
+  default_locale: en
+
+# Outgoing requests — respect a proxy if you have one (optional)
+# outgoing:
+#   proxies:
+#     all://:
+#       - http://host.docker.internal:8080
+
+engines:
+  - name: google
+    disabled: false
+  - name: duckduckgo
+    disabled: false
+  - name: bing
+    disabled: false
+  - name: brave
+    disabled: false
+  - name: wikipedia
+    disabled: false
