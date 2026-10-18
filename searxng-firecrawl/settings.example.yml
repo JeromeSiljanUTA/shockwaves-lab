@@ -12,7 +12,7 @@ general:
   # public_instance: false
 
 server:
-  base_url: http://localhost:8888/
+  base_url: http://searxng.nemesis.home.arpa/
   secret_key: "CHANGE_ME_TO_A_RANDOM_STRING"
   limiter: false
   image_proxy: true

@@ -12,7 +12,7 @@ services:
         - ../../volumes/searxng/config:/etc/searxng:rw
 
       environment:
-        - SEARXNG_BASE_URL=http://localhost:8888/
+        - SEARXNG_BASE_URL=http://searxng.nemesis.home.arpa/
         - SEARXNG_REDIS_URL=redis://searxng-redis:6379/0
 
       depends_on:
