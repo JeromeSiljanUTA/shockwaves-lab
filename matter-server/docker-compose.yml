@@ -1,0 +1,43 @@
+services:
+    # Matter controller / WebSocket server for Home Assistant's Matter
+    # integration.
+    #
+    # Home Assistant here runs as a plain container (no HA OS supervisor), so
+    # the Matter server is not installed automatically as an add-on and has to
+    # run as its own service. The integration talks to it over a WebSocket at
+    # ws://localhost:5580/ws.
+    #
+    # Upstream note: the Python Matter Server (python-matter-server) was
+    # rewritten in TypeScript and moved to matterjs-server. This image is the
+    # drop-in replacement and speaks the same WebSocket API (final Python
+    # release was 8.1.2).
+    matter-server:
+      image: ghcr.io/matter-js/matterjs-server:stable
+      container_name: matter-server
+
+      # Host networking is mandatory for Matter: it relies on IPv6 link-local
+      # multicast (mDNS) on the LAN, which does not survive Docker's bridge
+      # NAT. Home Assistant already runs with network_mode: host too, so it
+      # can reach the server on the host's loopback.
+      network_mode: host
+
+      # Keep the root filesystem read-only; only /data (fabric + credentials)
+      # is writable.
+      read_only: true
+
+      environment:
+        - TZ=America/Chicago
+        # Bind the WebSocket API / dashboard to loopback only. This does not
+        # affect Matter traffic to devices, which still goes out on the LAN.
+        # If you want to open the dashboard (http://<host>:5580/) from another
+        # machine, remove this line (and mind the firewall).
+        - LISTEN_ADDRESS=127.0.0.1
+
+      volumes:
+        # Must be writable by uid 1000 (the image's unprivileged user, which
+        # is jerome on NEMESIS). Create it with:
+        #   sudo mkdir -p ../../volumes/matter-server/data
+        #   sudo chown -R 1000:1000 ../../volumes/matter-server/data
+        - ../../volumes/matter-server/data:/data
+
+      restart: unless-stopped
