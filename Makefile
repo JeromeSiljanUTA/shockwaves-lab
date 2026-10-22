@@ -29,7 +29,7 @@ help:
 	@echo "  make up                    start services (detached)"
 	@echo "  make stop                  stop services (keep containers)"
 	@echo "  make down                  stop and remove containers/networks"
-	@echo "  make restart               restart services"
+	@echo "  make restart               recreate services (down + up -d)"
 	@echo "  make ps                    show service status"
 	@echo "  make logs                  show recent logs"
 	@echo "  make config                validate/render compose config"
@@ -76,10 +76,14 @@ down:
 		( cd $(ROOT)/$$s && $(COMPOSE) down ) || { echo "!!! down failed for $$s"; exit 1; }; \
 	done
 
+# Full recreate: tear the project down (removes containers/networks) then
+# bring it back up detached. This is what CI calls after a service changes, so
+# that edits to a docker-compose.yml actually take effect (compose `restart`
+# does NOT re-read the compose file).
 restart:
 	@for s in $(TARGETS); do \
 		echo "==> restart $$s"; \
-		( cd $(ROOT)/$$s && $(COMPOSE) restart ) || { echo "!!! restart failed for $$s"; exit 1; }; \
+		( cd $(ROOT)/$$s && $(COMPOSE) down && $(COMPOSE) up -d ) || { echo "!!! restart failed for $$s"; exit 1; }; \
 	done
 
 ps:

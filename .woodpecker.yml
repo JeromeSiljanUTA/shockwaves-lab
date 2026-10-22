@@ -1,0 +1,54 @@
+# Deploy changed services on NEMESIS.
+#
+# Runs on the host via Woodpecker's `local` backend as the unprivileged
+# `woodpecker` user. The heavy lifting (docker lifecycle) is delegated to a
+# root-owned wrapper that only runs `make restart SERVICE=<svc>`.
+#
+# Flow:
+#   1. Detect which top-level service dirs changed in this push.
+#   2. Sync the pushed checkout into the deploy repo
+#      (/iacon/containers/shockwaves-lab) so root deploys exactly the commit
+#      that triggered this pipeline. It must be this path: the compose files
+#      bind-mount ../../volumes, which resolves to /iacon/containers/volumes.
+#   3. Write the changed-service list to /var/lib/woodpecker/deploy-services.
+#   4. `sudo /run/woodpecker/docker-deploy` (no args) reads that list and runs
+#      `make restart SERVICE=<svc>` for each.
+when:
+  event: push
+  branch: master
+
+steps:
+  deploy:
+    image: bash
+    commands:
+      - |
+        set -eu
+        repo="/iacon/containers/shockwaves-lab"
+        list="/var/lib/woodpecker/deploy-services"
+
+        # 1. Changed top-level service directories (skip non-service paths).
+        changed=$(printf '%s' "$CI_PIPELINE_FILES" \
+          | grep -oE '"[^"]+/[^"]+"' \
+          | tr -d '"' \
+          | cut -d/ -f1 \
+          | sort -u)
+        [ -n "$changed" ] || { echo "no service changes"; exit 0; }
+
+        # 2. Sync the pushed tree into the deploy repo. rsync mirrors the
+        #    checkout (minus git metadata) into the group-writable dir.
+        #    --delete keeps removed files from lingering.
+        rsync -a --delete \
+          --exclude '.git' \
+          --exclude 'volumes' \
+          "$CI_WORKSPACE"/ "$repo"/
+
+        # 3. Record which services to redeploy (validated by the wrapper too).
+        : > "$list"
+        for svc in $changed; do
+          [ -f "$repo/$svc/docker-compose.yml" ] || continue
+          printf '%s\n' "$svc" >> "$list"
+        done
+        [ -s "$list" ] || { echo "no deployable services changed"; exit 0; }
+
+        # 4. Redeploy via the scoped, no-argument root wrapper.
+        /run/wrappers/bin/sudo /run/woodpecker/docker-deploy

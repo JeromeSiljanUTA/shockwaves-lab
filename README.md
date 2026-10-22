@@ -40,3 +40,29 @@ environment:
   POSTGRES_USER: ${DB_USERNAME}
   POSTGRES_DB: ${DB_DATABASE_NAME}
 ```
+
+## CI
+
+Woodpecker watches this repo. On push to `master`, it detects the changed
+service directories and runs, for each one:
+
+```
+make restart SERVICE=<service>
+```
+
+`make restart` is a full recreate (`docker compose down` + `up -d`), so edits to
+a `docker-compose.yml` actually take effect — plain `compose restart` does not
+re-read the file.
+
+The pipeline runs as the unprivileged `woodpecker` user. It first syncs the
+pushed checkout into the deploy directory, then invokes a single root-owned
+wrapper (`/run/woodpecker/docker-deploy`) via sudo. That wrapper takes **no
+arguments** and only runs `make restart` for validated service names, so the CI
+user never gets arbitrary docker or root access.
+
+### Deploy location
+
+The repo is deployed to **`/iacon/containers/shockwaves-lab`**. This is not
+arbitrary: every compose file bind-mounts `../../volumes/...`, which resolves to
+`/iacon/containers/volumes` only from this path. Running the compose files from
+any other directory points the mounts at the wrong place.
