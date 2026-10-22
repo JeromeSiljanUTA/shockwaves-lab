@@ -1,26 +1,42 @@
 # Shockwave's Lab
 
-This is where I will keep the configuration of all the containers running on NEMESIS.
+Docker container setup for **NEMESIS**. One directory per service, each with its own `docker-compose.yml`.
 
-## Management
+The host config (Docker, nginx, firewall, DNS, etc.) lives in the **nixos** repo: `hosts/NEMESIS/configuration.nix`.
 
-A `Makefile` wraps the per-service compose projects. Run `make` (or `make help`) from the repo root.
+## Nginx
 
-```bash
-make list              # show discovered services
-make pull              # pull all images
-make up                # start everything
-make upgrade           # pull + up, all services
-make ps                # status
-make logs              # recent logs (all)
-make config            # validate all compose files
+Every service gets an nginx virtual host in the nixos repo so it has a clean name instead of a port:
+
+```
+service.nemesis.home.arpa  ->  http://127.0.0.1:<port>
 ```
 
-Append `SERVICE=<dir>` to act on one service:
+`*.nemesis.home.arpa` resolves to NEMESIS via dnsmasq on MIRAGE. Add a vhost there for each new service.
 
-```bash
-make upgrade SERVICE=immich-app
-make logs SERVICE=gitea
+## Volumes
+
+Persistent state lives in a sibling `../volumes/<service>/` directory, bind-mounted into the container. Nothing in `volumes/` is tracked here — only the compose files are.
+
+```yaml
+volumes:
+  - ../../volumes/jellyfin/config:/config
+  - ../../volumes/jellyfin/media:/media
 ```
 
-Docker is invoked as `sudo docker` by default; override with `make DOCKER=docker ...`.
+## Secrets
+
+Credentials live in `../volumes/secrets/<service>/secrets.env` and are loaded with `env_file`. Never committed.
+
+```yaml
+env_file:
+  - ../../volumes/secrets/immich-app/secrets.env
+```
+
+For values that only affect one container, `environment:` may still reference vars from that env file:
+
+```yaml
+environment:
+  POSTGRES_USER: ${DB_USERNAME}
+  POSTGRES_DB: ${DB_DATABASE_NAME}
+```
