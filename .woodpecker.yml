@@ -16,7 +16,7 @@
 #
 # No rsync / no cross-user copying: git owns the tree and its permissions.
 when:
-  event: push
+  event: [push, manual]
   branch: master
 
 steps:
@@ -29,12 +29,17 @@ steps:
         remote="http://git.nemesis.home.arpa/jerome/shockwaves-lab"
         list="/var/lib/woodpecker/deploy-services"
 
-        # 1. Changed top-level service directories (skip non-service paths).
-        changed=$(printf '%s' "$CI_PIPELINE_FILES" \
-          | grep -oE '"[^"]+/[^"]+"' \
-          | tr -d '"' \
-          | cut -d/ -f1 \
-          | sort -u)
+        # 1. Services to (re)deploy. A manual run may pass SERVICE="a b";
+        #    otherwise detect the top-level dirs changed by this push.
+        if [ -n "${SERVICE:-}" ]; then
+          changed=$(printf '%s\n' "$SERVICE" | tr ' ' '\n' | sort -u)
+        else
+          changed=$(printf '%s' "$CI_PIPELINE_FILES" \
+            | grep -oE '"[^"]+/[^"]+"' \
+            | tr -d '"' \
+            | cut -d/ -f1 \
+            | sort -u)
+        fi
         [ -n "$changed" ] || { echo "no service changes"; exit 0; }
 
         # 2. Move the deploy clone to the triggering commit. The token is
