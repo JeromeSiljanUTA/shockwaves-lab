@@ -10,11 +10,12 @@ services:
             rm -f /fdroid/config.yml /fdroid/keystore.p12
             fdroid init --no-prompt
           fi
-
-      environment:
-        - FDROID_REPO_URL=http://fdroid.nemesis.home.arpa/fdroid/repo
-        - FDROID_REPO_NAME=Shockwave's Lab
-        - FDROID_REPO_DESCRIPTION=Apps from Shockwave's Lab.
+          sed -i '/^repo_url:/d; /^repo_name:/d; /^repo_description:/d; /^repo_icon:/d' /fdroid/config.yml
+          cat >> /fdroid/config.yml <<'EOF'
+          repo_url: http://fdroid.nemesis.home.arpa/fdroid/repo
+          repo_name: Jerome's Local F-Droid Repo
+          repo_description: Apps built by Jerome, served from NEMESIS.
+          EOF
 
       volumes:
         - ../../volumes/fdroid:/fdroid
@@ -33,10 +34,6 @@ services:
       environment:
         - TZ=Europe/London
         - FDROID_UPDATE_INTERVAL=6h
-        - FDROID_REPO_URL=http://fdroid.nemesis.home.arpa/fdroid/repo
-        - FDROID_REPO_NAME=Shockwave's Lab
-        - FDROID_REPO_DESCRIPTION=Apps from Shockwave's Lab.
-        - FDROID_REPO_ICON=
 
       volumes:
         - ../../volumes/fdroid:/fdroid
