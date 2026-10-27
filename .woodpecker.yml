@@ -25,7 +25,6 @@ steps:
     commands:
       - |
         set -eu
-        umask 002
         repo="/iacon/containers/shockwaves-lab"
         remote="http://git.nemesis.home.arpa/jerome/shockwaves-lab"
         list="/var/lib/woodpecker/deploy-services"

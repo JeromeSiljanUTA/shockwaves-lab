@@ -14,21 +14,6 @@ service.nemesis.home.arpa  ->  http://127.0.0.1:<port>
 
 `*.nemesis.home.arpa` resolves to NEMESIS via dnsmasq on MIRAGE. Add a vhost there for each new service.
 
-## F-Droid uploads
-
-The `fdroid` service runs the repo generator (`austozi/fdroidserver`) plus a
-`miniserve` sidecar that accepts APK uploads. Both share `volumes/fdroid/updates`;
-the repo rebuilds on a timer after files land there. Upload with basic auth:
-
-```
-curl -u ci:$FDROID_UPLOAD_PASSWORD \
-  -F "path=@app.apk" \
-  http://fdroid.nemesis.home.arpa/upload/upload?path=/
-```
-
-The token lives in `volumes/secrets/fdroid/secrets.env` as
-`MINISERVE_AUTH=ci:<password>` (uncommitted, like the other service secrets).
-
 ## Volumes
 
 Persistent state lives in a sibling `../volumes/<service>/` directory, bind-mounted into the container. Nothing in `volumes/` is tracked here — only the compose files are.
