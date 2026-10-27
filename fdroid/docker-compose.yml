@@ -1,7 +1,31 @@
 services:
+    init:
+      image: austozi/fdroidserver:latest
+      container_name: fdroid-init
+
+      entrypoint: ["sh", "-c"]
+      command:
+        - |
+          if [ ! -f /fdroid/config.yml ]; then
+            fdroid init --no-prompt
+          fi
+          fdroid update --create-key
+
+      environment:
+        - FDROID_REPO_URL=http://fdroid.nemesis.home.arpa/fdroid/repo
+        - FDROID_REPO_NAME=Shockwave's Lab
+        - FDROID_REPO_DESCRIPTION=Apps from Shockwave's Lab.
+
+      volumes:
+        - ../../volumes/fdroid:/fdroid
+
     fdroid:
       image: austozi/fdroidserver:latest
       container_name: fdroid
+
+      depends_on:
+        init:
+          condition: service_completed_successfully
 
       ports:
         - "8090:8080"
@@ -12,6 +36,7 @@ services:
         - FDROID_REPO_URL=http://fdroid.nemesis.home.arpa/fdroid/repo
         - FDROID_REPO_NAME=Shockwave's Lab
         - FDROID_REPO_DESCRIPTION=Apps from Shockwave's Lab.
+        - FDROID_REPO_ICON=
 
       volumes:
         - ../../volumes/fdroid:/fdroid
