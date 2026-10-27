@@ -1,0 +1,40 @@
+services:
+    fdroid:
+      image: austozi/fdroidserver:latest
+      container_name: fdroid
+
+      ports:
+        - "8090:8080"
+
+      environment:
+        - TZ=Europe/London
+        - FDROID_UPDATE_INTERVAL=6h
+        - FDROID_REPO_URL=http://fdroid.nemesis.home.arpa/fdroid/repo
+        - FDROID_REPO_NAME=Shockwave's Lab
+        - FDROID_REPO_DESCRIPTION=Apps from Shockwave's Lab.
+
+      volumes:
+        - ../../volumes/fdroid:/fdroid
+        - ../../volumes/fdroid/updates:/updates
+
+      restart: always
+
+    upload:
+      image: svenstaro/miniserve:latest
+
+      ports:
+        - "8091:8080"
+
+      command:
+        - --upload-files
+        - --disable-indexing
+        - --on-duplicate-files=overwrite
+        - /updates
+
+      env_file:
+        - ../../volumes/secrets/fdroid/secrets.env
+
+      volumes:
+        - ../../volumes/fdroid/updates:/updates
+
+      restart: always
