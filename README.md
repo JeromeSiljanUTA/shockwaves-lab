@@ -16,9 +16,15 @@ service.nemesis.home.arpa  ->  http://127.0.0.1:<port>
 
 ## F-Droid uploads
 
-The `fdroid` service runs the repo generator (`austozi/fdroidserver`) plus a
-`miniserve` sidecar that accepts APK uploads. Both share `volumes/fdroid/updates`;
-the repo rebuilds on a timer after files land there. Upload with basic auth:
+Three services cooperate:
+
+- **`fdroid`** (`austozi/fdroidserver`) builds and signs the repo index on a
+  timer, ingesting APKs from `volumes/fdroid/updates` via
+  `fdroid/update-scripts/` into `volumes/fdroid/repo`.
+- **`webserver`** (nginx) serves `volumes/fdroid/repo` on port `8090`.
+- **`upload`** (miniserve) accepts APK uploads into `volumes/fdroid/updates`.
+
+Upload with basic auth:
 
 ```
 curl -u ci:$FDROID_UPLOAD_PASSWORD \
@@ -28,6 +34,12 @@ curl -u ci:$FDROID_UPLOAD_PASSWORD \
 
 The token lives in `volumes/secrets/fdroid/secrets.env` as
 `MINISERVE_AUTH=ci:<password>` (uncommitted, like the other service secrets).
+
+nginx on NEMESIS maps `/upload/` → `127.0.0.1:8091` and `/fdroid/repo/` →
+`127.0.0.1:8090`.
+
+`vector-prime`'s `make mobile-push` performs the upload; `MOBILE_PUSH_WAIT=600`
+polls the repo index until the rebuild lands.
 
 ## Volumes
 

@@ -1,43 +1,31 @@
 services:
-    init:
-      image: austozi/fdroidserver:latest
-      container_name: fdroid-init
-
-      entrypoint: ["sh", "-c"]
-      command:
-        - |
-          if ! grep -q repo_keyalias /fdroid/config.yml 2>/dev/null; then
-            rm -f /fdroid/config.yml /fdroid/keystore.p12
-            fdroid init --no-prompt
-          fi
-          sed -i '/^repo_url:/d; /^repo_name:/d; /^repo_description:/d; /^repo_icon:/d' /fdroid/config.yml
-          cat >> /fdroid/config.yml <<'EOF'
-          repo_url: http://fdroid.nemesis.home.arpa/fdroid/repo
-          repo_name: Jerome's Local F-Droid Repo
-          repo_description: Apps built by Jerome, served from NEMESIS.
-          EOF
-
-      volumes:
-        - ../../volumes/fdroid:/fdroid
-
     fdroid:
       image: austozi/fdroidserver:latest
       container_name: fdroid
 
-      depends_on:
-        init:
-          condition: service_completed_successfully
-
-      ports:
-        - "8090:8080"
-
       environment:
         - TZ=Europe/London
-        - FDROID_UPDATE_INTERVAL=6h
+        - FDROID_UPDATE_INTERVAL=15m
+        - FDROID_REPO_URL=http://fdroid.nemesis.home.arpa/fdroid/repo
+        - FDROID_REPO_NAME=Jerome's Local F-Droid Repo
+        - FDROID_REPO_DESCRIPTION=Apps built by Jerome, served from NEMESIS.
 
       volumes:
         - ../../volumes/fdroid:/fdroid
         - ../../volumes/fdroid/updates:/updates
+        - ./update-scripts:/update-scripts:ro
+
+      restart: always
+
+    webserver:
+      image: nginx:alpine
+      container_name: fdroid-webserver
+
+      ports:
+        - "8090:80"
+
+      volumes:
+        - ../../volumes/fdroid/repo:/usr/share/nginx/html:ro
 
       restart: always
 
