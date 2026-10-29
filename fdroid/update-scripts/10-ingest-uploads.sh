@@ -40,6 +40,16 @@ if [ ${#apks[@]} -eq 0 ]; then
   echo "fdroid-ingest: no APKs in $UPDATES_DIR"
 fi
 
+icons=("$UPDATES_DIR"/*_icon.png)
+for icon in "${icons[@]}"; do
+  pkg=$(basename "$icon" _icon.png)
+  icon_dir="$REPO_DIR/$pkg/en-US"
+  mkdir -p "$icon_dir"
+  echo "fdroid-ingest: installing icon for $pkg"
+  cp -f "$icon" "$icon_dir/icon.png"
+  rm -f "$icon"
+done
+
 cd "$APP_ROOT"
 if [ ! -f "$APP_ROOT/keystore.p12" ]; then
   fdroid update --create-key --create-metadata --quiet

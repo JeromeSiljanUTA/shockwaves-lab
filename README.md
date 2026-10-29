@@ -35,6 +35,11 @@ To require basic auth, add `MINISERVE_AUTH=ci:<password>` to the `upload`
 service's environment (e.g. via an `env_file`); miniserve reads that variable
 natively.
 
+APKs named `<anything>.apk` are ingested into the repo. A file named
+`<package-id>_icon.png` is installed as the app icon at
+`repo/<package-id>/en-US/icon.png` — needed because modern AGP obfuscates
+`res/`, so fdroidserver cannot pull the launcher icon out of the APK itself.
+
 nginx on NEMESIS maps `/upload/` → `127.0.0.1:8091` and `/fdroid/repo/` →
 `127.0.0.1:8090`.
 
