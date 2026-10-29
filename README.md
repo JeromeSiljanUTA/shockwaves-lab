@@ -24,16 +24,16 @@ Three services cooperate:
 - **`webserver`** (nginx) serves `volumes/fdroid/repo` on port `8090`.
 - **`upload`** (miniserve) accepts APK uploads into `volumes/fdroid/updates`.
 
-Upload with basic auth:
+Upload (no auth by default):
 
 ```
-curl -u ci:$FDROID_UPLOAD_PASSWORD \
-  -F "path=@app.apk" \
+curl -F "path=@app.apk" \
   http://fdroid.nemesis.home.arpa/upload/upload?path=/
 ```
 
-The token lives in `volumes/secrets/fdroid/secrets.env` as
-`MINISERVE_AUTH=ci:<password>` (uncommitted, like the other service secrets).
+To require basic auth, add `MINISERVE_AUTH=ci:<password>` to the `upload`
+service's environment (e.g. via an `env_file`); miniserve reads that variable
+natively.
 
 nginx on NEMESIS maps `/upload/` → `127.0.0.1:8091` and `/fdroid/repo/` →
 `127.0.0.1:8090`.

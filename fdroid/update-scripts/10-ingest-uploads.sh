@@ -29,11 +29,6 @@ apk_target_name() {
 
 shopt -s nullglob
 apks=("$UPDATES_DIR"/*.apk)
-if [ ${#apks[@]} -eq 0 ]; then
-  echo "fdroid-ingest: no APKs in $UPDATES_DIR"
-  exit 0
-fi
-
 for apk in "${apks[@]}"; do
   target=$(apk_target_name "$apk")
   echo "fdroid-ingest: moving $(basename "$apk") into repo as $target"
@@ -41,9 +36,15 @@ for apk in "${apks[@]}"; do
   rm -f "$apk"
 done
 
+if [ ${#apks[@]} -eq 0 ]; then
+  echo "fdroid-ingest: no APKs in $UPDATES_DIR"
+fi
+
 cd "$APP_ROOT"
-fdroid update --create-metadata --quiet || {
-  echo "fdroid-ingest: --create-metadata reported a problem; continuing" >&2
-}
+if [ ! -f "$APP_ROOT/keystore.p12" ]; then
+  fdroid update --create-key --create-metadata --quiet
+else
+  fdroid update --create-metadata --quiet
+fi
 
 echo "fdroid-ingest: done"

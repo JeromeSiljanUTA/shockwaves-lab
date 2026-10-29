@@ -10,10 +10,31 @@ services:
         - FDROID_REPO_NAME=Jerome's Local F-Droid Repo
         - FDROID_REPO_DESCRIPTION=Apps built by Jerome, served from NEMESIS.
 
+      entrypoint:
+        - sh
+        - -ceu
+        - |
+          if [ ! -f /fdroid/config.yml ]; then
+            fdroid init --no-prompt
+          fi
+          sed -i '/^repo_url:/d; /^repo_name:/d; /^repo_description:/d; /^repo_icon:/d' /fdroid/config.yml
+          {
+            echo "repo_url: $$FDROID_REPO_URL"
+            echo "repo_name: $$FDROID_REPO_NAME"
+            echo "repo_description: $$FDROID_REPO_DESCRIPTION"
+          } >> /fdroid/config.yml
+          while :; do
+            for f in /updates-scripts/*.sh; do
+              [ -f "$$f" ] && bash "$$f"
+            done
+            fdroid update -c
+            sleep "$$FDROID_UPDATE_INTERVAL"
+          done
+
       volumes:
         - ../../volumes/fdroid:/fdroid
         - ../../volumes/fdroid/updates:/updates
-        - ./update-scripts:/update-scripts:ro
+        - ./update-scripts:/updates-scripts:ro
 
       restart: always
 
@@ -40,9 +61,6 @@ services:
         - --disable-indexing
         - --on-duplicate-files=overwrite
         - /updates
-
-      env_file:
-        - ../../volumes/secrets/fdroid/secrets.env
 
       volumes:
         - ../../volumes/fdroid/updates:/updates
