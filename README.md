@@ -1,5 +1,11 @@
 # Shockwave's Lab
 
+| ![Shockwave in his lab](shockwave-in-his-lab.jpg) | ![Shockwave's offsite laboratory](shockwaves-lab-wide.jpg) |
+|:--:|:--:|
+| Shockwave in his offsite laboratory | Rows of Predacon cloning pods |
+
+<sub>Screenshots from *Transformers: Prime*.</sub>
+
 Docker container setup for **NEMESIS**. One directory per service, each with its own `docker-compose.yml`.
 
 The host config (Docker, nginx, firewall, DNS, etc.) lives in the **nixos** repo: `hosts/NEMESIS/configuration.nix`.
