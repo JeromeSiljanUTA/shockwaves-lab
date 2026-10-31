@@ -8,8 +8,8 @@ services:
       - "8100:8099"
     volumes:
       - ../../volumes/jeromesiljan-com/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ../../volumes/secrets/jeromesiljan-com/.htpasswd:/etc/nginx/.htpasswd:ro
-      - ../../volumes/secrets/jeromesiljan-com/.htpasswd-occ:/etc/nginx/.htpasswd-occ:ro
+      - ../../volumes/secrets/jeromesiljan-com/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      - ../../volumes/secrets/jeromesiljan-com/nginx/.htpasswd-occ:/etc/nginx/.htpasswd-occ:ro
       - ../../volumes/jeromesiljan-com/nginx/logs:/var/log/nginx
       - ../../volumes/jeromesiljan-com/blog:/var/www/blog:ro
     networks:

@@ -14,8 +14,8 @@ Runtime files on the host:
 /iacon/containers/volumes/jeromesiljan-com/nginx/nginx.conf
 /iacon/containers/volumes/jeromesiljan-com/nginx/logs/
 /iacon/containers/volumes/jeromesiljan-com/blog/          # built by the blog pipeline
-/iacon/containers/volumes/secrets/jeromesiljan-com/.htpasswd
-/iacon/containers/volumes/secrets/jeromesiljan-com/.htpasswd-occ
+/iacon/containers/volumes/secrets/jeromesiljan-com/nginx/.htpasswd
+/iacon/containers/volumes/secrets/jeromesiljan-com/nginx/.htpasswd-occ
 /iacon/containers/volumes/secrets/jeromesiljan-com/cloudflared/
 /iacon/containers/volumes/secrets/jeromesiljan-com/secrets.env
 ```
