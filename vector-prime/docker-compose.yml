@@ -1,0 +1,23 @@
+services:
+    api:
+      image: git.nemesis.home.arpa/jerome/vector-prime-api:latest
+      container_name: vector-prime-api
+
+      ports:
+        - "8912:8913"
+
+      env_file:
+        - config.env
+        - ../../volumes/secrets/vector-prime/secrets.env
+
+      restart: unless-stopped
+
+    scheduler:
+      image: git.nemesis.home.arpa/jerome/vector-prime-scheduler:latest
+      container_name: vector-prime-scheduler
+
+      env_file:
+        - config.env
+        - ../../volumes/secrets/vector-prime/secrets.env
+
+      restart: unless-stopped

@@ -85,17 +85,18 @@ Woodpecker watches this repo. On push to `master`, it detects the changed
 service directories and runs, for each one:
 
 ```
-make restart SERVICE=<service>
+make upgrade SERVICE=<service>
 ```
 
-`make restart` is a full recreate (`docker compose down` + `up -d`), so edits to
-a `docker-compose.yml` actually take effect — plain `compose restart` does not
-re-read the file.
+`make upgrade` pulls the latest images and recreates the service (`docker
+compose pull` + `down` + `up -d`), so both image updates and edits to a
+`docker-compose.yml` actually take effect — plain `compose restart` re-reads
+neither.
 
 The pipeline runs as the unprivileged `woodpecker` user. It first syncs the
 pushed checkout into the deploy directory, then invokes a single root-owned
 wrapper (`/run/woodpecker/docker-deploy`) via sudo. That wrapper takes **no
-arguments** and only runs `make restart` for validated service names, so the CI
+arguments** and only runs `make upgrade` for validated service names, so the CI
 user never gets arbitrary docker or root access.
 
 ### Deploy location
