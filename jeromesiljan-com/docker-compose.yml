@@ -1,0 +1,36 @@
+networks:
+  app:
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8100:8099"
+    volumes:
+      - ../../volumes/jeromesiljan-com/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../../volumes/secrets/jeromesiljan-com/.htpasswd:/etc/nginx/.htpasswd:ro
+      - ../../volumes/secrets/jeromesiljan-com/.htpasswd-occ:/etc/nginx/.htpasswd-occ:ro
+      - ../../volumes/jeromesiljan-com/nginx/logs:/var/log/nginx
+      - ../../volumes/jeromesiljan-com/blog:/var/www/blog:ro
+    networks:
+      - app
+
+  api:
+    image: git.nemesis.home.arpa/jerome/first-time-guest:latest
+    env_file:
+      - config.env
+      - ../../volumes/secrets/jeromesiljan-com/secrets.env
+    networks:
+      - app
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --protocol http2 run
+    networks:
+      - app
+    volumes:
+      - ../../volumes/secrets/jeromesiljan-com/cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - nginx
+    restart: unless-stopped
