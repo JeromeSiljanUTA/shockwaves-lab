@@ -1,0 +1,79 @@
+# Frigate starter config — Shockwave's Lab
+#
+# The camera currently exposes MJPEG only:
+#   http://192.168.10.146:8080/stream
+#
+# MJPEG works but is CPU-heavy to decode and cannot use the GPU (NVDEC)
+# decoder. Most of these cameras also expose an RTSP/H.264 stream on port 554
+# (often at /h264 or /11); switch to it when known, and update the ffmpeg
+# preset accordingly (see the README notes).
+
+mqtt:
+  enabled: true
+  host: mosquitto
+  port: 1883
+  # If you add auth to mosquitto, set user/password here, or reference the
+  # frigate secrets env file. Do NOT commit credentials.
+
+go2rtc:
+  streams:
+    camera:
+      # go2rtc re-serves this as RTSP at rtsp://frigate:8554/camera
+      - http://192.168.10.146:8080/stream
+
+ffmpeg:
+  hwaccel_args: preset-nvidia
+
+detectors:
+  # The -tensorrt image auto-selects TensorRT when ONNX is configured and an
+  # NVIDIA GPU is present. Model is fetched/cached on first start.
+  onnx:
+    type: onnx
+
+model:
+  model_type: yolo-generic
+  width: 320
+  height: 320
+  input_tensor: nchw
+  input_dtype: float
+  path: /config/model_cache/yolo.onnx
+  labelmap_path: /labelmap/coco-80.txt
+
+objects:
+  track:
+    - person
+    - car
+    - dog
+    - cat
+
+cameras:
+  camera:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/camera
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+            - detect
+    detect:
+      enabled: true
+      width: 1280
+      height: 720
+      fps: 5
+    record:
+      enabled: true
+      retain:
+        days: 3
+        mode: motion
+      alerts:
+        retain:
+          days: 14
+      detections:
+        retain:
+          days: 14
+    snapshots:
+      enabled: true
+      retain:
+        default: 14
+
+version: 0.16

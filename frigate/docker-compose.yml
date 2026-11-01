@@ -1,0 +1,49 @@
+services:
+    frigate:
+      image: ghcr.io/blakeblackshear/frigate:stable-tensorrt
+      container_name: frigate
+
+      # NVIDIA card shared with Jellyfin/Ollama via the nvidia-container-toolkit
+      # (CDI device, same convention as those services). The -tensorrt image
+      # uses the GPU for the ONNX detector and preset-nvidia for ffmpeg decode.
+      devices:
+        - nvidia.com/gpu=all
+
+      environment:
+        - NVIDIA_VISIBLE_DEVICES=all
+        - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+        - TZ=America/Chicago
+
+      # 2 cameras worth of detect frames plus headroom; see
+      # https://docs.frigate.video/frigate/installation#calculating-required-shm-size
+      shm_size: "512mb"
+
+      ports:
+        # 8971 is the authenticated UI/API; nginx proxies to this.
+        - "8971:8971"
+        # 5000 is the internal *unauthenticated* API. Bind it to loopback so
+        # it is reachable from host-network services (Home Assistant) and by
+        # other containers, but not from the LAN.
+        - "127.0.0.1:5000:5000"
+        # RTSP restream from go2rtc. Unauthenticated by default — keep it on
+        # loopback unless you add authentication to go2rtc.
+        - "127.0.0.1:8554:8554"
+        # WebRTC for low-latency live view (needs to be reachable by browsers).
+        - "8555:8555/tcp"
+        - "8555:8555/udp"
+
+      volumes:
+        # Writable state (frigate.db, model_cache). The editable config lives
+        # in this repo and is mounted on top of it read-only.
+        - ../../volumes/frigate/config:/config
+        - ./config.yml:/config/config.yml:ro
+        - ../../volumes/frigate/storage:/media/frigate
+        # In-memory scratch space for recording segments (keep off the disk).
+        - type: tmpfs
+          target: /tmp/cache
+          tmpfs:
+            size: 1000000000
+        - /etc/localtime:/etc/localtime:ro
+
+      restart: unless-stopped
+      stop_grace_period: 30s
