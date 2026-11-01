@@ -33,10 +33,16 @@ go2rtc:
     # LensCast's RTSP encoder is landscape-only (640x480/1280x720/1920x1080) and
     # stretches the portrait sensor into that canvas, so RTSP can't give us a
     # portrait image. The MJPEG web stream is the raw camera frame -- true
-    # portrait -- so we use it instead and let go2rtc re-serve it as RTSP.
-    # Trade-off: no NVDEC (MJPEG decodes on CPU) and recordings are re-encoded.
+    # portrait -- so we use it instead.
+    #
+    # MJPEG is not H.264, so go2rtc must transcode it: the ffmpeg: prefix plus
+    # #video=h264 is required for the restream to be usable at all, and
+    # #hardware puts the encode on the NVIDIA card. Without these, MSE live
+    # view fails after its startup timeout and drops to jsmpeg (the lag).
+    # Note: ffmpeg.hwaccel_args below does NOT cover this -- it only applies to
+    # Frigate's own detect/record processes, not go2rtc's transcodes.
     camera:
-      - http://192.168.10.146:8080/stream
+      - "ffmpeg:http://192.168.10.146:8080/stream#video=h264#hardware"
 
 ffmpeg:
   hwaccel_args: preset-nvidia
