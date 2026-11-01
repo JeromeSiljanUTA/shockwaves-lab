@@ -27,31 +27,32 @@ mqtt:
 
 go2rtc:
   streams:
-    # go2rtc restreams these so the browser live view is MSE/H.264 instead of
-    # the jsmpeg MJPEG fallback. Main is used for live view; sub is detect-only.
-    # LensCast negotiates RTP over TCP (interleaved), so force tcp.
+    # go2rtc restreams the main RTSP feed so the browser live view is MSE/H.264
+    # instead of the jsmpeg MJPEG fallback. LensCast negotiates RTP over TCP
+    # (interleaved), so force tcp. The /sub stream is intentionally not used:
+    # LensCast fixed-encodes it at 640x480 landscape and aspect-fills the
+    # portrait sensor onto it, which produces green/black bars.
     camera:
       - rtsp://192.168.10.146:8554/stream#transport=tcp
-    camera_sub:
-      - rtsp://192.168.10.146:8554/sub#transport=tcp
 
 ffmpeg:
   hwaccel_args: preset-nvidia
 
 detectors:
-  # The -tensorrt image auto-selects TensorRT when ONNX is configured and an
-  # NVIDIA GPU is present. Model is fetched/cached on first start.
-  onnx:
-    type: onnx
+  # TensorRT on the NVIDIA card. Frigate builds the .trt model on first start
+  # from the YOLO_MODELS env var (see docker-compose.yml). Using the ONNX
+  # detector here would require an .onnx file that Frigate never downloads.
+  tensorrt:
+    type: tensorrt
+    device: 0
 
 model:
-  model_type: yolo-generic
+  path: /config/model_cache/tensorrt/yolov7-320.trt
+  labelmap_path: /labelmap/coco-80.txt
+  input_tensor: nchw
+  input_pixel_format: rgb
   width: 320
   height: 320
-  input_tensor: nchw
-  input_dtype: float
-  path: /config/model_cache/yolo.onnx
-  labelmap_path: /labelmap/coco-80.txt
 
 objects:
   track:
@@ -67,22 +68,19 @@ cameras:
         # Lenscast sends AAC, so copy the audio into recordings.
         record: preset-record-generic-audio-copy
       inputs:
-        # High-res main stream for recordings.
+        # Main stream serves both roles. detect.width/height below downscale it
+        # for the detector; Frigate does this itself, no second phone encode.
         - path: rtsp://127.0.0.1:8554/camera
           input_args: preset-rtsp-restream
           roles:
             - record
-        # LensCast's dedicated 640x480 detect sub-stream. Cheaper to decode
-        # and gives the detector a stable small frame.
-        - path: rtsp://127.0.0.1:8554/camera_sub
-          input_args: preset-rtsp-restream
-          roles:
             - detect
     detect:
       enabled: true
-      # Matches the sub-stream's fixed 640x480 (landscape).
-      width: 640
-      height: 480
+      # 1280x720 is the main stream's native size. Keep the aspect ratio equal
+      # to the stream's or the overlay/UI stretches.
+      width: 1280
+      height: 720
       fps: 5
     record:
       enabled: true
@@ -104,4 +102,3 @@ cameras:
     live:
       streams:
         Main Stream: camera
-        Sub Stream: camera_sub
