@@ -1,12 +1,15 @@
-# Frigate starter config — Shockwave's Lab
+# Frigate config — Shockwave's Lab
 #
-# The camera currently exposes MJPEG only:
-#   http://192.168.10.146:8080/stream
+# Camera is an Android phone running LensCast (https://github.com/raulshma/lenscast),
+# which serves proper RTSP/H.264 alongside the MJPEG web stream. We use the RTSP
+# streams, not MJPEG: MJPEG can't use NVDEC and forces the UI onto Frigate's
+# low-bandwidth jsmpeg path.
 #
-# MJPEG works but is CPU-heavy to decode and cannot use the GPU (NVDEC)
-# decoder. Most of these cameras also expose an RTSP/H.264 stream on port 554
-# (often at /h264 or /11); switch to it when known, and change
-# go2rtc.streams.camera plus the ffmpeg input below to the RTSP URL.
+#   main  rtsp://192.168.10.146:8554/stream  1280x720 H.264+AAC  -> record
+#   sub   rtsp://192.168.10.146:8554/sub     640x480  H.264      -> detect
+#
+# Both are landscape regardless of phone orientation; mount the phone
+# landscape, or accept the aspect-fill if you leave it portrait.
 
 # nginx (NEMESIS) terminates TLS and proxies plain HTTP to 8971. Frigate
 # generates and serves a self-signed cert on 8971 by default, which makes that
@@ -24,9 +27,13 @@ mqtt:
 
 go2rtc:
   streams:
+    # go2rtc restreams these so the browser live view is MSE/H.264 instead of
+    # the jsmpeg MJPEG fallback. Main is used for live view; sub is detect-only.
+    # LensCast negotiates RTP over TCP (interleaved), so force tcp.
     camera:
-      # go2rtc re-serves this as RTSP at rtsp://frigate:8554/camera
-      - http://192.168.10.146:8080/stream
+      - rtsp://192.168.10.146:8554/stream#transport=tcp
+    camera_sub:
+      - rtsp://192.168.10.146:8554/sub#transport=tcp
 
 ffmpeg:
   hwaccel_args: preset-nvidia
@@ -56,16 +63,26 @@ objects:
 cameras:
   camera:
     ffmpeg:
+      output_args:
+        # Lenscast sends AAC, so copy the audio into recordings.
+        record: preset-record-generic-audio-copy
       inputs:
+        # High-res main stream for recordings.
         - path: rtsp://127.0.0.1:8554/camera
           input_args: preset-rtsp-restream
           roles:
             - record
+        # LensCast's dedicated 640x480 detect sub-stream. Cheaper to decode
+        # and gives the detector a stable small frame.
+        - path: rtsp://127.0.0.1:8554/camera_sub
+          input_args: preset-rtsp-restream
+          roles:
             - detect
     detect:
       enabled: true
-      width: 1280
-      height: 720
+      # Matches the sub-stream's fixed 640x480 (landscape).
+      width: 640
+      height: 480
       fps: 5
     record:
       enabled: true
@@ -83,3 +100,8 @@ cameras:
       enabled: true
       retain:
         default: 14
+    # Live view uses the main go2rtc stream (MSE/H.264) rather than MJPEG.
+    live:
+      streams:
+        Main Stream: camera
+        Sub Stream: camera_sub
