@@ -14,7 +14,7 @@ services:
         - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
         - TZ=America/Chicago
 
-      # 2 cameras worth of detect frames plus headroom; see
+      # One 720p camera needs ~120mb; 512mb leaves headroom to add cameras.
       # https://docs.frigate.video/frigate/installation#calculating-required-shm-size
       shm_size: "512mb"
 

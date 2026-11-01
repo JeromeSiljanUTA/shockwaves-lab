@@ -5,8 +5,15 @@
 #
 # MJPEG works but is CPU-heavy to decode and cannot use the GPU (NVDEC)
 # decoder. Most of these cameras also expose an RTSP/H.264 stream on port 554
-# (often at /h264 or /11); switch to it when known, and update the ffmpeg
-# preset accordingly (see the README notes).
+# (often at /h264 or /11); switch to it when known, and change
+# go2rtc.streams.camera plus the ffmpeg input below to the RTSP URL.
+
+# nginx (NEMESIS) terminates TLS and proxies plain HTTP to 8971. Frigate
+# generates and serves a self-signed cert on 8971 by default, which makes that
+# proxy return "400 The plain HTTP request was sent to HTTPS port". Disable
+# Frigate-side TLS to match every other service's proxy pattern.
+tls:
+  enabled: false
 
 mqtt:
   enabled: true
