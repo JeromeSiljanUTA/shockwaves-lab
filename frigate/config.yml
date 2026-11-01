@@ -69,18 +69,17 @@ cameras:
       fps: 5
     record:
       enabled: true
-      retain:
+      motion:
         days: 3
-        mode: motion
       alerts:
         retain:
           days: 14
+          mode: motion
       detections:
         retain:
           days: 14
+          mode: motion
     snapshots:
       enabled: true
       retain:
         default: 14
-
-version: 0.16
