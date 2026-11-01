@@ -1,15 +1,18 @@
 # Frigate config — Shockwave's Lab
 #
-# Camera is an Android phone running LensCast (https://github.com/raulshma/lenscast),
-# which serves proper RTSP/H.264 alongside the MJPEG web stream. We use the RTSP
-# streams, not MJPEG: MJPEG can't use NVDEC and forces the UI onto Frigate's
-# low-bandwidth jsmpeg path.
+# Camera is an Android phone running LensCast (https://github.com/raulshma/lenscast).
+# It offers two outputs:
 #
-#   main  rtsp://192.168.10.146:8554/stream  1280x720 H.264+AAC  -> record
-#   sub   rtsp://192.168.10.146:8554/sub     640x480  H.264      -> detect
+#   MJPEG  http://192.168.10.146:8080/stream   720x960 true portrait   <- used
+#   RTSP   rtsp://192.168.10.146:8554/stream   landscape-only encoder
 #
-# Both are landscape regardless of phone orientation; mount the phone
-# landscape, or accept the aspect-fill if you leave it portrait.
+# We use MJPEG because the RTSP encoder in LensCast is fixed to landscape
+# (640x480/1280x720/1920x1080) and stretches the portrait sensor into that
+# canvas. MJPEG is the raw camera frame, so it stays portrait. Costs: CPU
+# decode (no NVDEC) and recordings are re-encoded rather than copied.
+#
+# Object detection is unaffected -- the TensorRT detector runs on decoded
+# frames regardless of the source codec.
 
 # nginx (NEMESIS) terminates TLS and proxies plain HTTP to 8971. Frigate
 # generates and serves a self-signed cert on 8971 by default, which makes that
@@ -27,21 +30,20 @@ mqtt:
 
 go2rtc:
   streams:
-    # go2rtc restreams the main RTSP feed so the browser live view is MSE/H.264
-    # instead of the jsmpeg MJPEG fallback. LensCast negotiates RTP over TCP
-    # (interleaved), so force tcp. The /sub stream is intentionally not used:
-    # LensCast fixed-encodes it at 640x480 landscape and aspect-fills the
-    # portrait sensor onto it, which produces green/black bars.
+    # LensCast's RTSP encoder is landscape-only (640x480/1280x720/1920x1080) and
+    # stretches the portrait sensor into that canvas, so RTSP can't give us a
+    # portrait image. The MJPEG web stream is the raw camera frame -- true
+    # portrait -- so we use it instead and let go2rtc re-serve it as RTSP.
+    # Trade-off: no NVDEC (MJPEG decodes on CPU) and recordings are re-encoded.
     camera:
-      - rtsp://192.168.10.146:8554/stream#transport=tcp
+      - http://192.168.10.146:8080/stream
 
 ffmpeg:
   hwaccel_args: preset-nvidia
 
 detectors:
   # TensorRT on the NVIDIA card. Frigate builds the .trt model on first start
-  # from the YOLO_MODELS env var (see docker-compose.yml). Using the ONNX
-  # detector here would require an .onnx file that Frigate never downloads.
+  # from the YOLO_MODELS env var (see docker-compose.yml).
   tensorrt:
     type: tensorrt
     device: 0
@@ -65,11 +67,11 @@ cameras:
   camera:
     ffmpeg:
       output_args:
-        # Lenscast sends AAC, so copy the audio into recordings.
-        record: preset-record-generic-audio-copy
+        # MJPEG source has no audio, so plain generic recording (video is
+        # re-encoded to H.264 by the restream/record path).
+        record: preset-record-generic
       inputs:
-        # Main stream serves both roles. detect.width/height below downscale it
-        # for the detector; Frigate does this itself, no second phone encode.
+        # Single input from the go2rtc restream serves both roles.
         - path: rtsp://127.0.0.1:8554/camera
           input_args: preset-rtsp-restream
           roles:
@@ -77,10 +79,10 @@ cameras:
             - detect
     detect:
       enabled: true
-      # 1280x720 is the main stream's native size. Keep the aspect ratio equal
-      # to the stream's or the overlay/UI stretches.
-      width: 1280
-      height: 720
+      # True portrait frame from LensCast's MJPEG stream (720x960), unlike the
+      # landscape RTSP encoder output.
+      width: 720
+      height: 960
       fps: 5
     record:
       enabled: true
@@ -98,7 +100,8 @@ cameras:
       enabled: true
       retain:
         default: 14
-    # Live view uses the main go2rtc stream (MSE/H.264) rather than MJPEG.
+    # Live view comes from the go2rtc restream of the MJPEG source. MJPEG has
+    # no H.264 to restream, so the UI uses the jsmpeg path rather than MSE.
     live:
       streams:
         Main Stream: camera
