@@ -4,7 +4,8 @@
 # `woodpecker` user. The deploy clone is group-owned (group `shockwaves`, which
 # both `woodpecker` and `jerome` belong to) and setgid, so either can edit it
 # without sudo. Only the container recreate needs root, and that is delegated to
-# a root-owned wrapper that takes no arguments and only runs `make upgrade`.
+# a root-owned wrapper that takes no arguments and only runs `make deploy`
+# (pull + `up -d --force-recreate`).
 #
 # Flow:
 #   1. Detect which top-level service dirs changed in this push.
@@ -12,7 +13,7 @@
 #      commit that triggered this pipeline (unprivileged; shared ownership).
 #   3. Write the changed-service list to /var/lib/woodpecker/deploy-services.
 #   4. `sudo /run/woodpecker/docker-deploy` (no args) runs
-#      `make upgrade SERVICE=<svc>` for each.
+#      `make deploy SERVICE=<svc>` (force-recreate) for each.
 #
 # No rsync / no cross-user copying: git owns the tree and its permissions.
 when:
