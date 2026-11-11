@@ -5,7 +5,14 @@ services:
         - "3001:3000"
         - "2222:2222"
       environment:
-        - GITEA__webhook__ALLOWED_HOST_LIST=ci.nemesis.home.arpa                                                                          
+        # The Woodpecker webhook target (ci.nemesis.home.arpa) resolves to a
+        # private IP. Gitea's tightened egress/host matcher (CVE-2026-22874)
+        # denies non-public targets unless an IP or the `private` builtin is
+        # listed; a hostname entry alone no longer covers them. Without this,
+        # pushes never reach Woodpecker and pipelines stop running.
+        - GITEA__security__ALLOWED_HOST_LIST=ci.nemesis.home.arpa,private
+        # Kept for Gitea < 28, where the key still lives under [webhook].
+        - GITEA__webhook__ALLOWED_HOST_LIST=ci.nemesis.home.arpa,private
       volumes:
         - ../../volumes/gitea/data:/var/lib/gitea
         - ../../volumes/gitea/config:/etc/gitea
