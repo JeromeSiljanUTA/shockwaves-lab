@@ -19,7 +19,7 @@ TARGETS := $(if $(SERVICE),$(SERVICE),$(SERVICES))
 
 .DEFAULT_GOAL := help
 
-.PHONY: help list pull up stop down restart ps logs config upgrade prune
+.PHONY: help list pull up stop down restart ps logs config upgrade deploy prune
 
 help:
 	@echo "Shockwave's Lab — container management"
@@ -34,6 +34,7 @@ help:
 	@echo "  make logs                  show recent logs"
 	@echo "  make config                validate/render compose config"
 	@echo "  make upgrade               pull then up"
+	@echo "  make deploy                pull then force-recreate"
 	@echo "  make prune                 remove unused docker images"
 	@echo
 	@echo "  Append SERVICE=<dir> to affect a single service, e.g.:"
@@ -108,6 +109,16 @@ config:
 		( cd $(ROOT)/$$s && $(COMPOSE) config >/dev/null ) || { echo "!!! invalid config for $$s"; exit 1; }; \
 	done
 	@echo "All configs valid."
+
+# Pull the newest images and recreate the containers unconditionally.
+# Plain `up -d` reuses an existing `:latest` tag, so an image that was just
+# pushed to the registry would never be picked up. `--force-recreate`
+# guarantees a fresh container even when only the image digest changed.
+deploy: pull
+	@for s in $(TARGETS); do \
+		echo "==> deploy $$s"; \
+		( cd $(ROOT)/$$s && $(COMPOSE) up -d --force-recreate ) || { echo "!!! deploy failed for $$s"; exit 1; }; \
+	done
 
 upgrade: pull up
 
