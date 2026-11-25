@@ -14,6 +14,9 @@ services:
       - ../../volumes/jeromesiljan-com/blog:/var/www/blog:ro
     networks:
       - app
+    depends_on:
+      - api
+    restart: unless-stopped
 
   api:
     image: git.nemesis.home.arpa/jerome/first-time-guest:latest
