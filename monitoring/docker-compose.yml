@@ -1,0 +1,52 @@
+networks:
+  monitoring:
+
+services:
+  loki:
+    image: grafana/loki:latest
+    user: "0:0"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki/config.yml:/etc/loki/local-config.yaml:ro
+      - ../../volumes/monitoring/loki:/loki
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  alloy:
+    image: grafana/alloy:latest
+    user: "0:0"
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ../../volumes/jeromesiljan-com/nginx/logs:/logs/jeromesiljan:ro
+      - ../../volumes/monitoring/alloy:/var/lib/alloy/data
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    user: "0:0"
+    ports:
+      - "127.0.0.1:3030:3000"
+    env_file:
+      - ../../volumes/secrets/monitoring/secrets.env
+    environment:
+      GF_SERVER_ROOT_URL: http://grafana.nemesis.home.arpa
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ../../volumes/monitoring/grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+    restart: unless-stopped

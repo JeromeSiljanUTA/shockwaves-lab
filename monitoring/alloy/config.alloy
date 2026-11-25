@@ -1,0 +1,33 @@
+local.file_match "jeromesiljan_access" {
+	path_targets = [{
+		__path__ = "/logs/jeromesiljan/auth.log",
+		host     = "nemesis",
+		job      = "jeromesiljan-nginx",
+		logtype  = "access",
+	}]
+}
+
+local.file_match "jeromesiljan_error" {
+	path_targets = [{
+		__path__ = "/logs/jeromesiljan/error.log",
+		host     = "nemesis",
+		job      = "jeromesiljan-nginx",
+		logtype  = "error",
+	}]
+}
+
+loki.source.file "jeromesiljan_access" {
+	targets    = local.file_match.jeromesiljan_access.targets
+	forward_to = [loki.write.default.receiver]
+}
+
+loki.source.file "jeromesiljan_error" {
+	targets    = local.file_match.jeromesiljan_error.targets
+	forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

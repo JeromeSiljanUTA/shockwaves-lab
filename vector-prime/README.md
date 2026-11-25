@@ -9,7 +9,7 @@ image: git.nemesis.home.arpa/jerome/vector-prime-api:latest
 ```
 
 vector-prime's Woodpecker pipeline builds and pushes the images, then triggers
-the normal deploy (`make upgrade SERVICE=vector-prime`) through the shared
+the normal deploy (`make deploy SERVICE=vector-prime`) through the shared
 `/run/woodpecker/docker-deploy` wrapper. Nothing special is needed here beyond
 the registry image names.
 
