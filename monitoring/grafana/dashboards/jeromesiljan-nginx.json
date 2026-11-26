@@ -14,7 +14,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 0
       },
       "id": 3,
       "options": {
@@ -44,7 +44,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 10
       },
       "id": 2,
       "options": {
@@ -153,5 +153,5 @@
   "timezone": "America/Chicago",
   "title": "jeromesiljan.com nginx",
   "uid": "jeromesiljan-nginx",
-  "version": 3
+  "version": 4
 }
