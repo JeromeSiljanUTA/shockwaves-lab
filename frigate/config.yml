@@ -38,17 +38,21 @@ ffmpeg:
   hwaccel_args: preset-nvidia
 
 detectors:
-  # TensorRT on the NVIDIA card. Frigate builds the .trt model on first start
-  # from the YOLO_MODELS env var (see docker-compose.yml).
-  tensorrt:
-    type: tensorrt
-    device: 0
+  # Frigate 0.18 removed the tensorrt detector on amd64; the ONNX detector is
+  # the replacement, and in this image onnxruntime picks the TensorRT/CUDA
+  # execution provider automatically when the GPU is visible.
+  onnx:
+    type: onnx
 
 model:
-  path: /config/model_cache/tensorrt/yolov7-320.trt
+  model_type: yolo-generic
+  # Committed to the repo (see models/export-yolov9.sh) and mounted read-only
+  # at /models, so a fresh host needs no manual export.
+  path: /models/yolov9-t-320.onnx
   labelmap_path: /labelmap/coco-80.txt
   input_tensor: nchw
   input_pixel_format: rgb
+  input_dtype: float
   width: 320
   height: 320
 

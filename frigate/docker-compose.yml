@@ -13,10 +13,6 @@ services:
         - NVIDIA_VISIBLE_DEVICES=all
         - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
         - TZ=America/Chicago
-        # Generate the TensorRT detection model on startup if missing. The
-        # -tensorrt image builds it once into /config/model_cache/tensorrt,
-        # then reuses the .trt file on later boots.
-        - YOLO_MODELS=yolov7-320
 
       # One 720p camera needs ~120mb; 512mb leaves headroom to add cameras.
       # https://docs.frigate.video/frigate/installation#calculating-required-shm-size
@@ -39,8 +35,11 @@ services:
       volumes:
         # Writable state (frigate.db, model_cache). The editable config lives
         # in this repo and is mounted on top of it read-only.
+        # Editable config and the detection model live in this repo and are
+        # mounted on top of writable state.
         - ../../volumes/frigate/config:/config
         - ./config.yml:/config/config.yml:ro
+        - ./models:/models:ro
         - ../../volumes/frigate/storage:/media/frigate
         # In-memory scratch space for recording segments (keep off the disk).
         - type: tmpfs
