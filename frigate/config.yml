@@ -44,6 +44,11 @@ go2rtc:
     camera:
       - "ffmpeg:http://192.168.10.146:8080/stream#video=h264#hardware"
 
+    # Android IP Camera app (port 4444), 720x720 @ 25fps MJPEG. Same rule as
+    # above: transcode to h264 on the GPU so the restream is usable.
+    android:
+      - "ffmpeg:http://192.168.10.146:4444/video/mjpeg#video=h264#hardware"
+
 ffmpeg:
   hwaccel_args: preset-nvidia
 
@@ -111,3 +116,39 @@ cameras:
     live:
       streams:
         Main Stream: camera
+
+  android:
+    ffmpeg:
+      output_args:
+        record: preset-record-generic
+      inputs:
+        - path: rtsp://127.0.0.1:8554/android
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+            - detect
+    detect:
+      enabled: true
+      # Square frame from the Android IP Camera app's MJPEG stream.
+      width: 720
+      height: 720
+      fps: 5
+    record:
+      enabled: true
+      motion:
+        days: 3
+      alerts:
+        retain:
+          days: 14
+          mode: motion
+      detections:
+        retain:
+          days: 14
+          mode: motion
+    snapshots:
+      enabled: true
+      retain:
+        default: 14
+    live:
+      streams:
+        Main Stream: android
