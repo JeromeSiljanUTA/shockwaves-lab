@@ -14,36 +14,6 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "{job=\"jeromesiljan-nginx\", logtype=\"access\"} | json | status=~\"401|403\" | line_format \"user={{.remote_user}} | path={{.uri}} | ip={{.cf_connecting_ip}} | status={{.status}} | browser={{.http_user_agent}}\"",
-          "refId": "A"
-        }
-      ],
-      "title": "Auth failures",
-      "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
         "y": 10
       },
       "id": 3,
@@ -63,6 +33,36 @@
         }
       ],
       "title": "Auth successes",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"jeromesiljan-nginx\", logtype=\"access\"} | json | status=~\"401|403\" | line_format \"user={{.remote_user}} | path={{.uri}} | ip={{.cf_connecting_ip}} | status={{.status}} | browser={{.http_user_agent}}\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Auth failures",
       "type": "logs"
     },
     {
