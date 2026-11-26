@@ -17,13 +17,15 @@ local.file_match "jeromesiljan_error" {
 }
 
 loki.source.file "jeromesiljan_access" {
-	targets    = local.file_match.jeromesiljan_access.targets
-	forward_to = [loki.write.default.receiver]
+	targets       = local.file_match.jeromesiljan_access.targets
+	tail_from_end = true
+	forward_to    = [loki.write.default.receiver]
 }
 
 loki.source.file "jeromesiljan_error" {
-	targets    = local.file_match.jeromesiljan_error.targets
-	forward_to = [loki.write.default.receiver]
+	targets       = local.file_match.jeromesiljan_error.targets
+	tail_from_end = true
+	forward_to    = [loki.write.default.receiver]
 }
 
 loki.write "default" {

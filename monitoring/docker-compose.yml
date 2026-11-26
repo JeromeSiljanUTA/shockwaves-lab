@@ -5,7 +5,11 @@ services:
   loki:
     image: grafana/loki:latest
     user: "0:0"
-    command: -config.file=/etc/loki/local-config.yaml
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+      # /iacon is 94% full; allow Loki to ingest until 95% so the WAL
+      # does not go read-only while the disk is cleaned up.
+      - -ingester.wal-disk-full-threshold=0.95
     volumes:
       - ./loki/config.yml:/etc/loki/local-config.yaml:ro
       - ../../volumes/monitoring/loki:/loki

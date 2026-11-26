@@ -68,7 +68,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"jeromesiljan-nginx\", logtype=\"access\"} | json | status=~\"401|403\" | line_format \"user={{.remote_user}} ip={{.remote_addr}} path={{.uri}} status={{.status}} ua={{.http_user_agent}}\"",
+          "expr": "{job=\"jeromesiljan-nginx\", logtype=\"access\"} | json | status=~\"401|403\" | line_format \"user={{.remote_user}} ip={{.cf_connecting_ip}} path={{.uri}} status={{.status}} ua={{.http_user_agent}}\"",
           "refId": "A"
         }
       ],
