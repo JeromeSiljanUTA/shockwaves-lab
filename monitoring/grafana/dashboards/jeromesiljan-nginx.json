@@ -1,77 +1,121 @@
 {
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "graphTooltip": 0,
   "panels": [
     {
-      "datasource": { "type": "loki", "uid": "loki" },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "fieldConfig": {
-        "defaults": { "unit": "short" },
+        "defaults": {
+          "unit": "short"
+        },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
           "expr": "sum(count_over_time({job=\"jeromesiljan-nginx\", logtype=\"access\"} [$__auto]))",
           "refId": "A"
         }
       ],
-      "title": "Requests",
+      "title": "Request volume",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
-      "fieldConfig": {
-        "defaults": { "unit": "short" },
-        "overrides": []
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
       "id": 2,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum by (status) (count_over_time({job=\"jeromesiljan-nginx\", logtype=\"access\"} | json [$__auto]))",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"jeromesiljan-nginx\", logtype=\"access\"} | json | status=~\"401|403\" | line_format \"user={{.remote_user}} ip={{.remote_addr}} path={{.uri}} status={{.status}} ua={{.http_user_agent}}\"",
           "refId": "A"
         }
       ],
-      "title": "Status codes",
-      "type": "timeseries"
+      "title": "Auth failures",
+      "type": "logs"
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
-      "fieldConfig": {
-        "defaults": { "unit": "short" },
-        "overrides": []
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
       "id": 3,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum(count_over_time({job=\"jeromesiljan-nginx\", logtype=\"access\"} | json | status=401 [$__auto]))",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"jeromesiljan-nginx\", logtype=\"access\"} | json | status < 400 | remote_user != \"-\" | remote_user != \"\" | line_format \"user={{.remote_user}} path={{.uri}} ua={{.http_user_agent}}\"",
           "refId": "A"
         }
       ],
-      "title": "Basic auth failures (401)",
-      "type": "timeseries"
+      "title": "Auth successes",
+      "type": "logs"
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
       "id": 4,
       "options": {
         "showTime": true,
@@ -80,26 +124,10 @@
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{job=\"jeromesiljan-nginx\", logtype=\"access\"} | json",
-          "refId": "A"
-        }
-      ],
-      "title": "Recent access logs",
-      "type": "logs"
-    },
-    {
-      "datasource": { "type": "loki", "uid": "loki" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
-      "id": 5,
-      "options": {
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
-      "targets": [
-        {
-          "datasource": { "type": "loki", "uid": "loki" },
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
           "expr": "{job=\"jeromesiljan-nginx\", logtype=\"error\"}",
           "refId": "A"
         }
@@ -110,12 +138,20 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["nginx", "jeromesiljan"],
-  "templating": { "list": [] },
-  "time": { "from": "now-24h", "to": "now" },
+  "tags": [
+    "nginx",
+    "jeromesiljan"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "jeromesiljan.com nginx",
   "uid": "jeromesiljan-nginx",
-  "version": 1
+  "version": 2
 }
