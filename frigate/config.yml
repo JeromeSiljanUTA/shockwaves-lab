@@ -107,3 +107,10 @@ cameras:
       # source to H.264 so MSE works instead of falling back to jsmpeg.
       streams:
         Main Stream: android
+
+camera_groups:
+  Kitchen_Window:
+    cameras:
+      - android
+    icon: LuDoorOpen
+    order: 1
