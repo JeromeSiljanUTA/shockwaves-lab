@@ -22,6 +22,12 @@ mqtt:
   # frigate secrets env file. Do NOT commit credentials.
 
 go2rtc:
+  ffmpeg:
+    # Overrides go2rtc's h264/cuda template (the default is `-g 50`). MSE can't
+    # begin playback until an I-frame arrives, so a 2s GOP at the camera's 25fps
+    # means a 1-2s wait every time the live player is created. 10 frames keeps
+    # that under half a second for a negligible bitrate cost.
+    h264/cuda: "-c:v h264_nvenc -g 10 -bf 0 -profile:v high -level:v auto -preset:v p2 -tune:v ll"
   streams:
     # Android IP Camera app (port 4444), 720x720 @ 25fps MJPEG.
     #
@@ -32,7 +38,7 @@ go2rtc:
     # Note: ffmpeg.hwaccel_args below does NOT cover this -- it only applies to
     # Frigate's own detect/record processes, not go2rtc's transcodes.
     android:
-      - "ffmpeg:http://192.168.10.146:4444/video/mjpeg#video=h264#hardware"
+      - "ffmpeg:http://192.168.10.146:4444/video/mjpeg#video=h264#hardware=cuda"
 
 ffmpeg:
   hwaccel_args: preset-nvidia
