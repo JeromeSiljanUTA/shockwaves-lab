@@ -1,0 +1,49 @@
+services:
+    # OpenThread Border Router for Thread/Matter devices.
+    #
+    # Home Assistant runs as a plain container here (no HA OS supervisor), so
+    # the Thread border router is not installed automatically as an add-on and
+    # has to run as its own service, exactly like the Matter server.
+    #
+    # Radio: SONOFF Dongle Lite MG21 (EFR32MG21). It must run OpenThread RCP
+    # (spinel) firmware. The same stick is also sold as a Zigbee coordinator;
+    # with EmberZNet/EZSP on it, otbr-agent fails its spinel handshake and the
+    # stick has to be reflashed with an ot-rcp image first.
+    otbr:
+      image: openthread/border-router:latest
+      container_name: otbr
+
+      # Host networking is mandatory: otbr-agent creates wpan0, forwards
+      # between the Thread mesh and the LAN, and advertises the mesh via mDNS.
+      network_mode: host
+
+      cap_add:
+        # otbr-agent configures interfaces, routes and its ingress filter.
+        - NET_ADMIN
+
+      devices:
+        # The MG21 sits behind a USB-UART bridge, so it enumerates as
+        # /dev/ttyUSB*, while the Zigbee stick (ITEAD Plus V2) is CDC-ACM and
+        # stays on /dev/ttyACM*. The names therefore do not collide; the stable
+        # by-id path is:
+        #   /dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Lite_MG21_3a3c0b13b9a2ef11b419966661ce3355-if00-port0
+        - /dev/ttyUSB0
+        - /dev/net/tun
+
+      environment:
+        - TZ=America/Chicago
+
+        # EFR32 RCP speaks spinel over the serial port at 460800 baud with
+        # hardware flow control. If the handshake fails, try 115200.
+        - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=460800
+
+        # LAN interface, NOT the radio: `ip -brief addr` on NEMESIS.
+        - OT_INFRA_IF=enp1s0
+
+        - OT_THREAD_IF=wpan0
+        - OT_LOG_LEVEL=5
+
+      volumes:
+        - ../../volumes/otbr/data:/data
+
+      restart: unless-stopped

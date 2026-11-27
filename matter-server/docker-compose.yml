@@ -29,9 +29,25 @@ services:
         - TZ=America/Chicago
         # Bind the WebSocket API / dashboard to loopback only. This does not
         # affect Matter traffic to devices, which still goes out on the LAN.
-        # If you want to open the dashboard (http://<host>:5580/) from another
-        # machine, remove this line (and mind the firewall).
+        # The dashboard is reached from other machines through the nginx vhost
+        # matter.nemesis.home.arpa, which needs PRODUCTION_MODE below.
         - LISTEN_ADDRESS=127.0.0.1
+
+        # Behind nginx the dashboard cannot detect that it is served from the
+        # same host, so point it at the current URL instead of asking.
+        - PRODUCTION_MODE=true
+
+        # BLE commissioning. The HA Companion app cannot do this on a phone
+        # without Play Services, so the server pairs devices itself from the
+        # dashboard using a Bluetooth adapter:
+        #
+        #   - BLUETOOTH_ADAPTER=0
+        #   - NOBLE_BINDINGS=dbus          # use host bluetoothd, unprivileged
+        #
+        # Requires `hardware.bluetooth.enable` on the host and the /run/dbus
+        # mount below. Without an adapter on NEMESIS, run the server with
+        # BLE_PROXY=true instead and point an ESPHome Bluetooth proxy (or the
+        # matter-ble-proxy CLI on a laptop) at it.
 
       volumes:
         # Must be writable by uid 1000 (the image's unprivileged user, which
