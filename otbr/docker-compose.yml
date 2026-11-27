@@ -38,7 +38,7 @@ services:
         - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=460800
 
         # LAN interface, NOT the radio: `ip -brief addr` on NEMESIS.
-        - OT_INFRA_IF=enp1s0
+        - OT_INFRA_IF=enp6s0
 
         - OT_THREAD_IF=wpan0
         - OT_LOG_LEVEL=5

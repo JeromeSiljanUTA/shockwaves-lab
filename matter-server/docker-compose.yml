@@ -37,17 +37,17 @@ services:
         # same host, so point it at the current URL instead of asking.
         - PRODUCTION_MODE=true
 
-        # BLE commissioning. The HA Companion app cannot do this on a phone
-        # without Play Services, so the server pairs devices itself from the
-        # dashboard using a Bluetooth adapter:
-        #
-        #   - BLUETOOTH_ADAPTER=0
-        #   - NOBLE_BINDINGS=dbus          # use host bluetoothd, unprivileged
-        #
-        # Requires `hardware.bluetooth.enable` on the host and the /run/dbus
-        # mount below. Without an adapter on NEMESIS, run the server with
-        # BLE_PROXY=true instead and point an ESPHome Bluetooth proxy (or the
-        # matter-ble-proxy CLI on a laptop) at it.
+        # mDNS must not leak onto the docker bridges or tailscale, so pin
+        # Matter's multicast to the LAN interface (NEMESIS: enp6s0).
+        - PRIMARY_INTERFACE=enp6s0
+
+        # BLE commissioning. Thread devices are handed their Thread credentials
+        # over Bluetooth, and the HA Companion app cannot do that on a phone
+        # without Play Services. The server can drive the host adapter itself;
+        # it talks to the host bluetoothd over D-Bus, which keeps the
+        # container unprivileged (no NET_ADMIN, no raw HCI socket).
+        - BLUETOOTH_ADAPTER=0
+        - NOBLE_BINDINGS=dbus
 
       volumes:
         # Must be writable by uid 1000 (the image's unprivileged user, which
@@ -55,5 +55,7 @@ services:
         #   sudo mkdir -p ../../volumes/matter-server/data
         #   sudo chown -R 1000:1000 ../../volumes/matter-server/data
         - ../../volumes/matter-server/data:/data
+        # BlueZ socket for BLE commissioning (see NOBLE_BINDINGS above).
+        - /run/dbus:/run/dbus:ro
 
       restart: unless-stopped
