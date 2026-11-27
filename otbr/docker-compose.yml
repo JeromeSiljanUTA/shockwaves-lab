@@ -43,6 +43,11 @@ services:
         - OT_THREAD_IF=wpan0
         - OT_LOG_LEVEL=5
 
+        # otbr-web defaults to 127.0.0.1:8080, which is sftpgo. The web UI is
+        # optional (ot-ctl does the same from the shell), so just move it off
+        # the taken port. The REST API used for diagnostics stays on 8081.
+        - OT_WEB_LISTEN_PORT=8099
+
       volumes:
         - ../../volumes/otbr/data:/data
 

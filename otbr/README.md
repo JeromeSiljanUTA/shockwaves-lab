@@ -15,10 +15,20 @@ A healthy start logs `Starting otbr-agent...`, `Radio URL:
 spinel+hdlc+uart:///dev/ttyUSB0...`, then the mesh details (BR ULA, OMR prefix)
 and `Thread Border Agent` registration.
 
-If it fails at the spinel handshake, the stick still has Zigbee firmware on it
-and must be flashed with an OpenThread RCP image (the same MG21 hardware is sold
-as a Zigbee coordinator). Also try `uart-baudrate=115200` before assuming the
-firmware is wrong.
+### `Init() at spinel_driver.cpp:87: Failure`
+
+The Dongle Lite MG21 ships with Zigbee (EmberZNet/EZSP) firmware — it is sold as
+"Zigbee/Thread", one or the other. `spinel_driver` init failing means it is
+still speaking EZSP, so otbr-agent has nothing to talk to.
+
+Flash the OpenThread firmware once with SONOFF's own tool: unplug the stick from
+NEMESIS, plug it into a laptop, open <https://dongle.sonoff.tech/sonoff-dongle-flasher/>
+in Chrome/Chromium (it uses WebSerial), pick **OpenThread**, flash. Then plug it
+back in and restart this container. The stick keeps the same USB-UART, so
+`/dev/ttyUSB0` does not change.
+
+If the handshake still fails after flashing, try `uart-baudrate=115200` before
+assuming anything else.
 
 ## Host prerequisites
 
