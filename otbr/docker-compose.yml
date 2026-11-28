@@ -33,9 +33,11 @@ services:
       environment:
         - TZ=America/Chicago
 
-        # EFR32 RCP speaks spinel over the serial port at 460800 baud with
-        # hardware flow control. If the handshake fails, try 115200.
-        - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=460800
+        # The baud rate is baked into the RCP image, so this has to match
+        # exactly what was last flashed or spinel init fails outright. SONOFF
+        # only publishes a 115200 ot-rcp build for the Lite (`donglelmg21_mg21_
+        # openthread_stable_2.4.4_115200.gbl`, see README), so 115200 it is.
+        - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200
 
         # LAN interface, NOT the radio: `ip -brief addr` on NEMESIS.
         - OT_INFRA_IF=enp6s0

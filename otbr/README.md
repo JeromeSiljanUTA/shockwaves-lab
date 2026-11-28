@@ -21,14 +21,40 @@ The Dongle Lite MG21 ships with Zigbee (EmberZNet/EZSP) firmware — it is sold 
 "Zigbee/Thread", one or the other. `spinel_driver` init failing means it is
 still speaking EZSP, so otbr-agent has nothing to talk to.
 
-Flash the OpenThread firmware once with SONOFF's own tool: unplug the stick from
-NEMESIS, plug it into a laptop, open <https://dongle.sonoff.tech/sonoff-dongle-flasher/>
-in Chrome/Chromium (it uses WebSerial), pick **OpenThread**, flash. Then plug it
-back in and restart this container. The stick keeps the same USB-UART, so
-`/dev/ttyUSB0` does not change.
+Flash it once with `universal-silabs-flasher`; it drives RTS/DTR into the Gecko
+bootloader itself, so no button has to be held:
 
-If the handshake still fails after flashing, try `uart-baudrate=115200` before
-assuming anything else.
+```bash
+curl -LO https://dongle.sonoff.tech/dongle-flasher/dongle-hardware/donglelmg21_mg21_openthread_stable_2.4.4_115200.gbl
+sudo env PATH="$PATH" nix shell nixpkgs#python3Packages.universal-silabs-flasher \
+  -c universal-silabs-flasher \
+  --device /dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Lite_MG21_3a3c0b13b9a2ef11b419966661ce3355-if00-port0 \
+  flash --firmware donglelmg21_mg21_openthread_stable_2.4.4_115200.gbl
+```
+
+Expect `Detected bootloader version '2.4.2'` and then a ~20 s progress bar. The
+`Failed to read firmware metadata: KeyError('No tag with id ...')` line is
+harmless: vendor images do not carry that optional GBL tag.
+
+The stick keeps the same USB-UART, so `/dev/ttyUSB0` does not change.
+
+**The baud rate is part of the image**, so `OT_RCP_DEVICE` must match what was
+flashed. SONOFF publishes no 460800 ot-rcp build for `dongle-lmg21` (only
+[Nerivec/silabs-firmware-builder](https://github.com/Nerivec/silabs-firmware-builder)
+ones), hence 115200 here.
+
+### Why not the web flasher
+
+<https://dongle.sonoff.tech/sonoff-dongle-flasher/> looks easier but wedges: it
+leaves the port locked inside Chrome (`Failed to execute 'close' on 'SerialPort':
+Cannot cancel a locked stream`) and then retries `close()` forever while the UI
+shows a fake "estimated remaining time", nothing having been written to flash.
+Its debug log is AES-encrypted; to read one:
+
+```bash
+base64 -d <logfile> | openssl enc -d -aes-256-ecb -md md5 \
+  -pass pass:c3d08a9d-c673-4950-85e0-c29277e74bb9
+```
 
 ## Host prerequisites
 
