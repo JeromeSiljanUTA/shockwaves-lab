@@ -10,7 +10,7 @@ services:
 
       environment:
         - NVIDIA_VISIBLE_DEVICES=all
-        - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+        - NVIDIA_DRIVER_CAPABILITIES=all
 
       volumes:
         - ../../volumes/jellyfin/config:/config
